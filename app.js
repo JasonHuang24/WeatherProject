@@ -1,23 +1,42 @@
-const express = require("express");
+const express = require("express"); //Importing the express module/package
 const app = express();
 const https = require("https");
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const url =
-  "https://api.openweathermap.org/data/2.5/weather?q=bangalore&units=metric&appid=0791b94be0a94ab76fcd8a93830a7a9b";
-https.get(url, function (response) {
-  console.log(response.statusCode);
-
-  response.on("data", function (data) {
-    const weatherData = JSON.parse(data);
-    const temp = weatherData.main.temp;
-    console.log(temp);
-  });
-});
 app.get("/", function (req, res) {
-  res.send("Server is up and running.");
+  //A GET should be used for requesting information from the web service.
+  res.sendFile(__dirname + "/index.html");
+});
+
+app.post("/", function (req, res) {
+  const query = req.body.cityName; //Retrieving city name
+  const appId = "0791b94be0a94ab76fcd8a93830a7a9b"; //API key
+  const units = "metric";
+  const url =
+    "https://api.openweathermap.org/data/2.5/weather?q=" +
+    query +
+    "&units=" +
+    units +
+    "&appid=" +
+    appId;
+  https.get(url, function (response) {
+    console.log(response.statusCode); //not required
+
+    response.on("data", function (data) {
+      const weatherData = JSON.parse(data);
+      const temp = weatherData.main.temp;
+      const weatherDescription = weatherData.weather[0].description;
+      const icon = weatherData.weather[0].icon;
+      const imageURL = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
+      res.write("<p>The weather is currently " + weatherDescription + "</p>");
+      res.write("The temperature in " + query + " is " + temp + " Celcius");
+      res.write("<img src=" + imageURL + ">");
+      res.send();
+    });
+  });
 });
 
 app.listen(3000, function () {
   console.log("Server is running on port 3000.");
 });
-hi
